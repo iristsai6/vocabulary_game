@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文練習</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d0d0d;--card:#161616;--border:#2a2a2a;--accent:#e8ff47;--accent2:#ff6b35;--text:#f0f0f0;--muted:#666;--correct:#4ade80;--wrong:#f87171;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 48px;}
+  body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(232,255,71,0.04) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(255,107,53,0.04) 0%,transparent 50%);pointer-events:none;}
+  .container{width:100%;max-width:500px;}
+
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;}
+  .title span{color:var(--accent);}
+  .score-area{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+  .score-bar{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);}
+  .score-val{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--accent);}
+  .streak{font-size:13px;color:var(--muted);}
+  .streak-val{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--accent2);}
+
+  /* TOPIC SELECTOR */
+  .topic-screen{text-align:center;padding:20px 0;}
+  .topic-title{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px;}
+  .topic-title span{color:var(--accent);}
+  .topic-sub{font-size:14px;color:var(--muted);margin-bottom:32px;}
+  .topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .topic-btn{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:24px 16px;cursor:pointer;transition:all 0.2s;text-align:center;position:relative;overflow:hidden;}
+  .topic-btn::before{content:'';position:absolute;inset:0;background:var(--accent);opacity:0;transition:opacity 0.2s;}
+  .topic-btn:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .topic-btn:hover::before{opacity:0.04;}
+  .topic-icon{font-size:32px;margin-bottom:10px;display:block;}
+  .topic-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .topic-desc{font-size:12px;color:var(--muted);}
+
+  /* TABS (in-game) */
+  .tab-bar{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px;}
+  .tab-bar::-webkit-scrollbar{display:none;}
+  .tab{background:var(--card);border:1.5px solid var(--border);color:var(--muted);border-radius:99px;padding:6px 14px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700;}
+
+  /* PROGRESS */
+  .progress-wrap{background:var(--border);border-radius:99px;height:4px;margin-bottom:24px;overflow:hidden;}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 0.5s ease;}
+
+  /* CARD */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:14px;position:relative;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),transparent);border-radius:20px 20px 0 0;}
+
+  .diff-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border-radius:99px;margin-bottom:14px;}
+  .badge-easy{background:rgba(74,222,128,0.15);color:var(--correct);}
+  .badge-medium{background:rgba(232,255,71,0.15);color:var(--accent);}
+  .badge-hard{background:rgba(248,113,113,0.15);color:var(--wrong);}
+
+  /* VOCAB word display */
+  .word-display{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,9vw,48px);font-weight:700;letter-spacing:-1px;margin:0 0 16px 0;padding:0.1em 0 0.4em 0;line-height:1.2;word-break:break-word;display:block;}
+  .word-hint{font-size:13px;color:var(--muted);margin-bottom:4px;}
+  .word-example{font-size:13px;color:#555;font-style:italic;}
+
+  /* GRAMMAR / DIALOGUE / CLOZE question text */
+  .q-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .q-text{font-size:17px;line-height:1.7;color:var(--text);margin-bottom:6px;}
+  .q-text .blank{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);padding:0 6px;}
+  .q-context{font-size:13px;color:#555;font-style:italic;margin-top:8px;}
+
+  /* READING */
+  .reading-passage{font-size:14px;line-height:1.9;color:#bbb;background:#111;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid var(--border);}
+  .reading-passage .highlight{color:var(--accent);font-weight:700;}
+
+  /* OPTIONS */
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .options.single-col{grid-template-columns:1fr;}
+  .opt-btn{background:var(--card);border:1.5px solid var(--border);color:var(--text);border-radius:14px;padding:14px 12px;font-family:'Noto Sans TC',sans-serif;font-size:15px;cursor:pointer;transition:all 0.15s;text-align:center;line-height:1.4;}
+  .opt-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);transform:translateY(-1px);}
+  .opt-btn.correct{border-color:var(--correct);background:rgba(74,222,128,0.1);color:var(--correct);}
+  .opt-btn.wrong{border-color:var(--wrong);background:rgba(248,113,113,0.1);color:var(--wrong);}
+  .opt-btn:disabled{cursor:default;}
+
+  .explain-box{background:#1a1a1a;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none;animation:fadeIn 0.3s ease;}
+  .explain-box .ex-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+  .explain-box .ex-text{font-size:14px;line-height:1.7;color:#ccc;}
+  .feedback.correct{color:var(--correct);}
+  .feedback.wrong{color:var(--wrong);}
+
+  .next-btn{width:100%;background:var(--accent);color:#000;border:none;border-radius:14px;padding:15px;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.15s;display:none;}
+  .next-btn:hover{background:#d4eb3a;transform:translateY(-1px);}
+  .q-count{font-size:13px;color:var(--muted);text-align:center;margin-top:10px;}
+
+  /* RESULT */
+  .result-screen{text-align:center;padding:20px 0;display:none;}
+  .result-emoji{font-size:64px;margin-bottom:14px;display:block;}
+  .result-title{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;margin-bottom:6px;}
+  .result-score{font-size:15px;color:var(--muted);margin-bottom:24px;}
+  .result-score strong{color:var(--accent);font-size:22px;}
+  .result-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .restart-btn{background:var(--accent);color:#000;border:none;border-radius:14px;padding:14px 28px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.15s;}
+  .restart-btn:hover{background:#d4eb3a;transform:translateY(-2px);}
+  .home-btn{background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:14px;padding:14px 28px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+  .home-btn:hover{border-color:var(--text);color:var(--text);}
+
+  .fade-in{animation:fadeIn 0.35s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .shake{animation:shake 0.3s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="title">英文<span>練習</span></div>
+    <div class="score-area">
+      <div class="score-bar">得分 <span class="score-val" id="score">0</span></div>
+      <div class="streak">連勝 <span class="streak-val" id="streak">0</span> 🔥</div>
+    </div>
+  </div>
+
+  <!-- TOPIC SELECTOR -->
+  <div id="topic-screen" class="topic-screen">
+    <div class="topic-title">選擇<span>主題</span></div>
+    <div class="topic-sub">每次隨機出 10 題，挑戰你的英文實力！</div>
+    <div class="topic-grid">
+      <div class="topic-btn" onclick="startGame('vocab')">
+        <span class="topic-icon">📖</span>
+        <div class="topic-name">單字</div>
+        <div class="topic-desc">初中高級混合</div>
+      </div>
+      <div class="topic-btn" onclick="startGame('grammar')">
+        <span class="topic-icon">✏️</span>
+        <div class="topic-name">文法</div>
+        <div class="topic-desc">時態、介系詞等</div>
+      </div>
+      <div class="topic-btn" onclick="startGame('dialogue')">
+        <span class="topic-icon">💬</span>
+        <div class="topic-name">對話</div>
+        <div class="topic-desc">日常情境應對</div>
+      </div>
+      <div class="topic-btn" onclick="startGame('cloze')">
+        <span class="topic-icon">🔍</span>
+        <div class="topic-name">克漏字</div>
+        <div class="topic-desc">填入正確單字</div>
+      </div>
+      <div class="topic-btn" onclick="startGame('reading')" style="grid-column:span 2;">
+        <span class="topic-icon">📰</span>
+        <div class="topic-name">短篇閱讀</div>
+        <div class="topic-desc">閱讀文章後回答問題</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME AREA -->
+  <div id="game-screen" style="display:none;">
+    <div class="progress-wrap"><div class="progress-bar" id="progress" style="width:0%"></div></div>
+    <div id="question-area">
+      <div class="card fade-in" id="q-card">
+        <div id="q-inner"></div>
+      </div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="explain-box" id="explain-box">
+        <div class="ex-label">💡 解說</div>
+        <div class="ex-text" id="explain-text"></div>
+      </div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一題 →</button>
+      <div class="q-count" id="q-count"></div>
+    </div>
+    <div class="result-screen" id="result-screen">
+      <span class="result-emoji" id="result-emoji">🎉</span>
+      <div class="result-title" id="result-title">太棒了！</div>
+      <div class="result-score">你答對了 <strong id="final-score">0</strong> / 10 題</div>
+      <div class="result-btns">
+        <button class="restart-btn" onclick="restartGame()">再玩一次 🔄</button>
+        <button class="home-btn" onclick="goHome()">選其他主題</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== BANKS =====================
+
+const VOCAB = [
+  {word:"apple",d:"easy",correct:"蘋果",hint:"名詞 n.",ex:"I eat an apple every day.",opts:["蘋果","香蕉","橘子","葡萄"],explain:"apple 是最常見的水果名詞。Apple a day keeps the doctor away 是著名英文諺語，意思是「每天一顆蘋果，醫生遠離我」。"},
+  {word:"happy",d:"easy",correct:"快樂的",hint:"形容詞 adj.",ex:"She is very happy today.",opts:["快樂的","悲傷的","憤怒的","疲倦的"],explain:"happy 是形容詞，表示「快樂的、高興的」。反義詞是 sad（悲傷的）。常見用法：I'm so happy for you!（我為你感到高興！）"},
+  {word:"run",d:"easy",correct:"跑步",hint:"動詞 v.",ex:"He likes to run in the park.",opts:["跑步","走路","跳躍","游泳"],explain:"run 作動詞是「跑步」，也有「運作、經營」的意思，例如 run a business（經營公司）。"},
+  {word:"beautiful",d:"easy",correct:"美麗的",hint:"形容詞 adj.",ex:"What a beautiful sunset!",opts:["美麗的","醜陋的","普通的","奇怪的"],explain:"beautiful 形容詞，表示「美麗的」，比 pretty 更正式。副詞形式是 beautifully（美麗地）。"},
+  {word:"friend",d:"easy",correct:"朋友",hint:"名詞 n.",ex:"She is my best friend.",opts:["朋友","敵人","陌生人","鄰居"],explain:"friend 是名詞「朋友」。friendly 是形容詞「友善的」。make friends（交朋友）是常見片語。"},
+  {word:"water",d:"easy",correct:"水",hint:"名詞 n.",ex:"Drink more water.",opts:["水","火","土","空氣"],explain:"water 是不可數名詞「水」。也可作動詞用，如 water the plants（給植物澆水）。"},
+  {word:"sleep",d:"easy",correct:"睡覺",hint:"動詞 v.",ex:"I need to sleep early.",opts:["睡覺","醒來","休息","夢想"],explain:"sleep 是動詞「睡覺」，也是名詞，如 get enough sleep（獲得足夠睡眠）。go to sleep 是「去睡覺」的常見說法。"},
+  {word:"warm",d:"easy",correct:"溫暖的",hint:"形容詞 adj.",ex:"The soup is warm.",opts:["溫暖的","寒冷的","炎熱的","涼爽的"],explain:"warm 形容詞表示「溫暖的」，介於 hot（熱）和 cool（涼）之間。也可形容人，如 a warm person（熱情的人）。"},
+  {word:"smile",d:"easy",correct:"微笑",hint:"動詞 n.",ex:"She has a beautiful smile.",opts:["微笑","大笑","哭泣","皺眉"],explain:"smile 可當動詞「微笑」或名詞「笑容」。比 laugh（大笑）更溫和。Keep smiling!（保持微笑！）"},
+  {word:"dream",d:"easy",correct:"夢想",hint:"名詞 n.",ex:"Follow your dream.",opts:["夢想","現實","計畫","目標"],explain:"dream 可當名詞「夢想/夢境」或動詞「夢到」。dream of/about something 表示「夢想某事」。"},
+  {word:"share",d:"easy",correct:"分享",hint:"動詞 v.",ex:"Share your food with others.",opts:["分享","保留","收藏","丟棄"],explain:"share 動詞「分享、共用」。share something with someone 是標準句型。在社群媒體中，share 也指「轉發」。"},
+  {word:"night",d:"easy",correct:"夜晚",hint:"名詞 n.",ex:"The stars shine at night.",opts:["夜晚","早晨","下午","黃昏"],explain:"night 是名詞「夜晚」。at night 表示「在夜晚」。Good night!（晚安！）是道別用語。"},
+  {word:"ambition",d:"medium",correct:"野心",hint:"名詞 n.",ex:"He has great ambition.",opts:["野心","謙遜","冷靜","疲勞"],explain:"ambition 名詞「野心、抱負」。有時帶正面意思（有上進心），有時帶負面意思（過度渴望權力）。形容詞 ambitious 指「有野心的」。"},
+  {word:"fragile",d:"medium",correct:"易碎的",hint:"形容詞 adj.",ex:"Handle with care, it's fragile.",opts:["易碎的","堅硬的","柔軟的","沉重的"],explain:"fragile 形容詞「易碎的、脆弱的」。常見於包裹標籤 FRAGILE（易碎品）。也可形容感情，如 a fragile relationship（脆弱的關係）。"},
+  {word:"negotiate",d:"medium",correct:"談判",hint:"動詞 v.",ex:"They negotiate the price.",opts:["談判","拒絕","接受","忽視"],explain:"negotiate 動詞「談判、協商」。名詞是 negotiation。negotiate with someone（與某人協商）、negotiate a deal（談成一筆交易）。"},
+  {word:"curious",d:"medium",correct:"好奇的",hint:"形容詞 adj.",ex:"Children are naturally curious.",opts:["好奇的","無聊的","害怕的","自信的"],explain:"curious 形容詞「好奇的」。be curious about something 表示「對某事感到好奇」。名詞是 curiosity（好奇心）。"},
+  {word:"generous",d:"medium",correct:"慷慨的",hint:"形容詞 adj.",ex:"She is very generous.",opts:["慷慨的","吝嗇的","誠實的","勤奮的"],explain:"generous 形容詞「慷慨的、大方的」。反義詞是 stingy（吝嗇的）。名詞是 generosity（慷慨）。"},
+  {word:"anxious",d:"medium",correct:"焦慮的",hint:"形容詞 adj.",ex:"She felt anxious before the test.",opts:["焦慮的","輕鬆的","興奮的","平靜的"],explain:"anxious 形容詞「焦慮的」。be anxious about something 表示「為某事擔憂」。名詞是 anxiety（焦慮）。"},
+  {word:"ancient",d:"medium",correct:"古老的",hint:"形容詞 adj.",ex:"This is an ancient temple.",opts:["古老的","現代的","未來的","全新的"],explain:"ancient 形容詞「古老的、古代的」，通常指非常久遠的歷史，如 ancient civilization（古代文明）、ancient Rome（古羅馬）。"},
+  {word:"brilliant",d:"medium",correct:"聰明的",hint:"形容詞 adj.",ex:"She is a brilliant student.",opts:["聰明的","平庸的","懶惰的","頑皮的"],explain:"brilliant 形容詞「聰明的、傑出的」，比 smart 更強調天才級別的聰明。也可表示「光輝的」，如 brilliant sunshine（燦爛的陽光）。"},
+  {word:"flexible",d:"medium",correct:"靈活的",hint:"形容詞 adj.",ex:"You need a flexible schedule.",opts:["靈活的","僵硬的","固定的","嚴格的"],explain:"flexible 形容詞「靈活的、有彈性的」。a flexible schedule（彈性時間表）。名詞是 flexibility（靈活性）。"},
+  {word:"courage",d:"medium",correct:"勇氣",hint:"名詞 n.",ex:"It takes courage to try.",opts:["勇氣","恐懼","力量","智慧"],explain:"courage 名詞「勇氣」，it takes courage to... 表示「做...需要勇氣」。形容詞是 courageous（勇敢的）。"},
+  {word:"grateful",d:"medium",correct:"感激的",hint:"形容詞 adj.",ex:"I am grateful for your help.",opts:["感激的","失望的","羨慕的","驚訝的"],explain:"grateful 形容詞「感激的」。be grateful for something（對某事感激）。比 thankful 更正式。名詞是 gratitude（感激之情）。"},
+  {word:"enormous",d:"medium",correct:"巨大的",hint:"形容詞 adj.",ex:"The building is enormous.",opts:["巨大的","微小的","適中的","普通的"],explain:"enormous 形容詞「巨大的」，比 big 和 large 程度更強。an enormous amount of（大量的）是常見搭配。"},
+  {word:"ephemeral",d:"hard",correct:"短暫的",hint:"形容詞 adj.",ex:"Fame is often ephemeral.",opts:["短暫的","永恆的","明顯的","隱藏的"],explain:"ephemeral 形容詞「短暫的、轉瞬即逝的」，源自希臘文，原意是「只存在一天」。常用於文學或正式寫作，如 ephemeral beauty（短暫的美麗）。"},
+  {word:"eloquent",d:"hard",correct:"口才好的",hint:"形容詞 adj.",ex:"He gave an eloquent speech.",opts:["口才好的","沉默的","粗魯的","猶豫的"],explain:"eloquent 形容詞「口才好的、雄辯的」。an eloquent speaker（口才流利的演講者）。名詞是 eloquence（口才、雄辯）。"},
+  {word:"inevitable",d:"hard",correct:"不可避免的",hint:"形容詞 adj.",ex:"Change is inevitable.",opts:["不可避免的","可預測的","偶然的","值得懷疑的"],explain:"inevitable 形容詞「不可避免的」，強調某事必然會發生。it is inevitable that...（...是不可避免的）是常見句型。名詞是 inevitability。"},
+  {word:"meticulous",d:"hard",correct:"一絲不苟的",hint:"形容詞 adj.",ex:"She is meticulous about details.",opts:["一絲不苟的","粗心大意的","隨意的","急躁的"],explain:"meticulous 形容詞「一絲不苟的、極度細心的」。be meticulous about details（對細節非常講究）。常用於描述工作態度嚴謹的人。"},
+  {word:"perseverance",d:"hard",correct:"堅忍不拔",hint:"名詞 n.",ex:"Perseverance leads to success.",opts:["堅忍不拔","輕率魯莽","猶豫不決","漫不經心"],explain:"perseverance 名詞「堅忍不拔、毅力」，強調面對困難仍持續努力。動詞是 persevere（堅持）。Perseverance is the key to success.（毅力是成功的關鍵。）"},
+  {word:"catastrophe",d:"hard",correct:"大災難",hint:"名詞 n.",ex:"The flood was a catastrophe.",opts:["大災難","小麻煩","好運氣","奇蹟"],explain:"catastrophe 名詞「大災難、大禍」，比 disaster 程度更嚴重。形容詞是 catastrophic（災難性的）。a catastrophic failure（災難性的失敗）。"},
+  {word:"resilient",d:"hard",correct:"有韌性的",hint:"形容詞 adj.",ex:"Children are resilient.",opts:["有韌性的","脆弱的","固執的","敏感的"],explain:"resilient 形容詞「有韌性的、能快速恢復的」。在心理學中常用，如 resilient mindset（有韌性的心態）。名詞是 resilience（韌性、恢復力）。"},
+  {word:"paradox",d:"hard",correct:"矛盾",hint:"名詞 n.",ex:"It is a paradox of modern life.",opts:["矛盾","規律","真理","謊言"],explain:"paradox 名詞「矛盾、悖論」，指表面上矛盾但可能含有真理的陳述。形容詞是 paradoxical（矛盾的）。"},
+  {word:"empathy",d:"hard",correct:"同理心",hint:"名詞 n.",ex:"Show empathy to others.",opts:["同理心","同情心","愛心","耐心"],explain:"empathy 名詞「同理心」，指設身處地理解他人感受。與 sympathy（同情心）不同，empathy 是真正感同身受。形容詞是 empathetic（有同理心的）。"},
+  {word:"euphoria",d:"hard",correct:"極度喜悅",hint:"名詞 n.",ex:"She felt euphoria after winning.",opts:["極度喜悅","極度悲傷","極度憤怒","極度恐懼"],explain:"euphoria 名詞「狂喜、極度喜悅」，形容一種強烈的幸福感。形容詞是 euphoric（欣喜若狂的）。常用於描述勝利或特殊時刻的感受。"},
+  {word:"deteriorate",d:"hard",correct:"惡化",hint:"動詞 v.",ex:"His health began to deteriorate.",opts:["惡化","改善","穩定","變化"],explain:"deteriorate 動詞「惡化、變差」。His condition deteriorated rapidly.（他的狀況迅速惡化。）名詞是 deterioration（惡化）。"},
+];
+
+const GRAMMAR = [
+  {q:"She ___ to school every day.",correct:"goes",hint:"第三人稱單數現在式",opts:["go","goes","going","went"],explain:"主詞是 she（第三人稱單數），現在簡單式動詞要加 -s，所以 go 變成 goes。規則：he/she/it + 動詞 + s/es。"},
+  {q:"They ___ watching TV when I called.",correct:"were",hint:"過去進行式",opts:["are","were","was","be"],explain:"過去進行式結構是「was/were + V-ing」。主詞 they 是複數，所以用 were。表示「我打電話時，他們正在看電視」。"},
+  {q:"I have ___ eaten lunch.",correct:"already",hint:"現在完成式副詞",opts:["yet","already","still","just yet"],explain:"already（已經）用於肯定句的現在完成式，表示動作已完成。yet 用於否定句或疑問句，如 I have not eaten yet。"},
+  {q:"He ___ in Tokyo for five years.",correct:"has lived",hint:"現在完成式",opts:["lived","lives","has lived","is living"],explain:"for five years（持續五年）搭配現在完成式，表示從過去持續到現在的狀態。結構：has/have + 過去分詞。"},
+  {q:"She is taller ___ her sister.",correct:"than",hint:"比較級",opts:["then","that","than","as"],explain:"比較級後面接 than，例如 taller than、bigger than。then 是「然後」，注意不要混淆！"},
+  {q:"This is ___ best movie I have ever seen.",correct:"the",hint:"最高級需加冠詞",opts:["a","an","the","—"],explain:"最高級（best、tallest 等）前面一定要加定冠詞 the，因為最高級是特指某一個。"},
+  {q:"I will call you ___ I arrive.",correct:"when",hint:"時間連接詞",opts:["until","when","while","since"],explain:"when 表示「當...的時候」。時間副詞子句用現在式代替未來式，所以說 when I arrive，不說 when I will arrive。"},
+  {q:"They ___ finish the project by Friday.",correct:"must",hint:"表義務的情態動詞",opts:["must","might","could","should"],explain:"must 表示強烈的義務「必須」。should 表示「應該」程度較弱；might/could 表示可能性，不表義務。"},
+  {q:"She ___ speak three languages fluently.",correct:"can",hint:"表能力的情態動詞",opts:["must","should","can","will"],explain:"can 表示「能力」，meaning 她有能力說三種語言。must 是義務，should 是建議，will 是意願或未來。"},
+  {q:"The letter ___ sent yesterday.",correct:"was",hint:"被動語態過去式",opts:["is","was","were","be"],explain:"被動語態結構：be 動詞 + 過去分詞。yesterday 表示過去，主詞 the letter 是單數，所以用 was sent。"},
+  {q:"I wish I ___ fly like a bird.",correct:"could",hint:"假設語氣",opts:["can","could","will","would"],explain:"I wish + 過去式表示假設語氣，「希望但實際上不可能」。能力用 could（can 的過去式）。意思是我希望我能飛，但我不能。"},
+  {q:"He ___ to the gym three times a week.",correct:"goes",hint:"第三人稱單數習慣",opts:["go","goes","is going","went"],explain:"three times a week 表示規律習慣，用現在簡單式。主詞 he 是第三人稱單數，go 要加 s 變成 goes。"},
+  {q:"By the time she arrives, we ___ finished.",correct:"will have",hint:"未來完成式",opts:["will have","have","had","will"],explain:"by the time（到...的時候）搭配未來完成式 will have + 過去分詞，表示「在某未來時間點之前已完成的動作」。"},
+  {q:"Neither John nor Mary ___ ready.",correct:"is",hint:"neither...nor 主詞一致",opts:["are","is","were","been"],explain:"neither...nor 連接兩個主詞時，動詞與最近的主詞一致（就近原則）。Mary 是單數，所以用 is。"},
+  {q:"She asked me ___ I was happy.",correct:"if",hint:"間接問句",opts:["that","if","what","whether to"],explain:"間接問句（yes/no 疑問句轉述）用 if 或 whether。She asked me if I was happy = 她問我是否快樂。語序變回正常陳述句。"},
+  {q:"___ you mind opening the window?",correct:"Would",hint:"禮貌請求",opts:["Will","Would","Could","Should"],explain:"Would you mind + V-ing 是非常禮貌的請求方式，意思是「您介意...嗎？」。比 Can you 更有禮貌。"},
+  {q:"I am used to ___ early.",correct:"waking up",hint:"be used to + V-ing",opts:["wake up","waking up","woke up","waken"],explain:"be used to + V-ing 表示「習慣做某事」。注意與 used to + 原形動詞（過去習慣）不同。I am used to waking up early = 我習慣早起。"},
+  {q:"He suggested ___ to the park.",correct:"going",hint:"suggest + V-ing",opts:["go","to go","going","gone"],explain:"suggest 後面接動名詞（V-ing），不接不定詞（to V）。其他類似動詞：enjoy、avoid、consider，都接 V-ing。"},
+  {q:"The cake ___ delicious.",correct:"tastes",hint:"感官動詞",opts:["is tasting","tastes","taste","tasted"],explain:"感官動詞（taste、smell、look、feel、sound）表示狀態時不用進行式。主詞 the cake 是單數，用 tastes。"},
+  {q:"She ___ her homework before dinner.",correct:"had done",hint:"過去完成式",opts:["did","has done","had done","was doing"],explain:"過去完成式（had + 過去分詞）表示「在另一個過去動作之前已完成的動作」。她在吃晚餐前已做完功課。"},
+];
+
+const DIALOGUE = [
+  {context:"在餐廳",q:'Waiter: "Are you ready to order?"\nYou: ___',correct:"Yes, I'd like the pasta, please.",opts:["I don't know yet.","Yes, I'd like the pasta, please.","No, I won't eat.","Give me everything."],explain:"點餐時說 I would like... 是最禮貌的說法，比 I want 更正式。please 放在句尾表示禮貌。"},
+  {context:"初次見面",q:'A: "Nice to meet you!"\nB: ___',correct:"Nice to meet you too!",opts:["Nice to meet you too!","Goodbye!","I'm busy.","What do you want?"],explain:"Nice to meet you too! 是標準回應，too 放句尾表示「我也是」。也可說 Pleased to meet you!"},
+  {context:"問路",q:'A: "Excuse me, how do I get to the station?"\nB: ___',correct:"Go straight and turn left.",opts:["I don't live here.","Go straight and turn left.","It's very far away.","You can't go there."],explain:"Go straight（直走）and turn left（左轉）是最清楚的指路說法。也可說 It's on your left."},
+  {context:"電話中",q:'A: "Can I speak to Mr. Chen?"\nB: "He is not in right now." \nA: ___',correct:"Can I leave a message?",opts:["Can I leave a message?","Where is he?","That's fine, bye.","Give me his number."],explain:"Can I leave a message?（我可以留言嗎？）是電話禮儀的標準說法。也可說 Could you ask him to call me back?"},
+  {context:"購物",q:'Cashier: "That will be $25."\nYou: ___',correct:"Here you go.",opts:["That's too much!","Here you go.","I don't have money.","What?"],explain:"Here you go.（拿去吧/給你。）是遞交物品時的常用語，非常自然。也可說 Here you are."},
+  {context:"道歉",q:'A: "I\'m so sorry I\'m late!"\nB: ___',correct:"No worries, it's fine.",opts:["You're terrible.","No worries, it's fine.","You're always late.","I don't care."],explain:"No worries 和 No problem 都是「沒關係」的口語說法，比 It's okay 更自然輕鬆。"},
+  {context:"邀請朋友",q:'A: "Would you like to join us for dinner?"\nB: ___',correct:"I'd love to, thank you!",opts:["I'd love to, thank you!","No, never.","Why would I?","Maybe not."],explain:"I'd love to!（我很樂意！）是接受邀請最熱情的說法。I'd = I would，表達強烈意願。"},
+  {context:"感謝",q:'A: "Thank you so much for your help!"\nB: ___',correct:"My pleasure!",opts:["My pleasure!","Don't talk to me.","OK whatever.","I know."],explain:"My pleasure!（我的榮幸！）比 You're welcome 更有溫度。也可說 Anytime! 或 Happy to help!"},
+  {context:"機場",q:'Officer: "What is the purpose of your visit?"\nYou: ___',correct:"I'm here for tourism.",opts:["None of your business.","I'm here for tourism.","I live here.","I don't know."],explain:"I'm here for tourism.（我來觀光的。）是入境時的標準回答。也可說 I'm on vacation."},
+  {context:"工作場合",q:'Boss: "Can you finish this by 5pm?"\nYou: ___',correct:"Sure, I'll get it done.",opts:["I quit.","Sure, I'll get it done.","That's too hard.","Ask someone else."],explain:"Sure, I'll get it done.（當然，我會完成的。）是積極回應上司的專業說法。也可說 No problem, I'll have it ready."},
+  {context:"看醫生",q:'Doctor: "Where does it hurt?"\nPatient: ___',correct:"I have a pain in my chest.",opts:["I'm very tired.","I have a pain in my chest.","I don't know.","Everywhere is fine."],explain:"I have a pain in my chest.（我胸口痛。）是描述症狀的標準說法。pain in + 部位 表示某處疼痛。"},
+  {context:"推薦餐廳",q:'A: "Do you know any good restaurants nearby?"\nB: ___',correct:"There's a great Italian place on Main Street.",opts:["I don't eat food.","There's a great Italian place on Main Street.","Go find it yourself.","Restaurants are everywhere."],explain:"There's a great + 形容詞 + place（有一個很棒的...）是推薦地點的自然說法。on Main Street 表示地點。"},
+  {context:"借東西",q:'A: "Could I borrow your pen for a second?"\nB: ___',correct:"Of course, here you go.",opts:["Of course, here you go.","Buy your own.","No, never.","What pen?"],explain:"Of course, here you go.（當然，給你。）是友善借出物品的回應。for a second 表示「只用一下」，讓請求聽起來更合理。"},
+  {context:"表達意見",q:'A: "What do you think of the new policy?"\nB: ___',correct:"I think it has both pros and cons.",opts:["I think it has both pros and cons.","I have no brain.","Policies are boring.","Ask the boss."],explain:"I think it has both pros and cons.（我認為各有利弊。）pros 是優點，cons 是缺點，pros and cons 是固定搭配。"},
+  {context:"道別",q:'A: "It was great catching up with you!"\nB: ___',correct:"Likewise! Let's do this again soon.",opts:["Likewise! Let's do this again soon.","Don't talk to me again.","Whatever.","I was bored."],explain:"Likewise!（我也是！）是簡潔回應「同樣感覺」的說法。Let's do this again soon 表示希望再見面，是道別的友善說法。"},
+];
+
+const CLOZE = [
+  {q:"The scientist made an important ___ that changed the world of medicine.",correct:"discovery",hint:"填入適當名詞",opts:["discovery","invention","mistake","decision"],explain:"make a discovery 是「有所發現」的固定搭配。invention 是「發明」，mistake 是「錯誤」，decision 是「決定」，都不符合語境。"},
+  {q:"She ___ hard for the exam and finally passed.",correct:"studied",hint:"填入適當動詞（過去式）",opts:["studies","studied","is studying","was study"],explain:"for the exam（為了考試而努力）是過去的動作，用過去式 studied。finally passed 也是過去式，時態一致。"},
+  {q:"The weather forecast says there is a high ___ of rain tomorrow.",correct:"chance",hint:"填入適當名詞",opts:["chance","hope","risk","luck"],explain:"a high chance of + 名詞/V-ing 表示「高機率...」，是固定搭配。hope 是希望，risk 是風險，luck 是運氣，都不符合 high ___ of 的搭配。"},
+  {q:"He was so tired that he fell ___ on the couch.",correct:"asleep",hint:"fall + ?",opts:["sleep","sleepy","asleep","sleeping"],explain:"fall asleep 是「入睡」的固定片語。sleepy 是「感到睏的」形容詞，asleep 是「睡著的」狀態形容詞，只有 asleep 能接在 fall 後面。"},
+  {q:"She gave a ___ speech that moved the entire audience.",correct:"moving",hint:"填入形容詞",opts:["bored","moving","moved","boring"],explain:"moving 形容「令人感動的」（主動讓人有感觸），moved 是「被感動的」（人的感受）。a moving speech = 一篇感人的演講。"},
+  {q:"The manager asked us to ___ our reports by Friday.",correct:"submit",hint:"填入動詞原形",opts:["submitting","submitted","submit","submits"],explain:"ask someone to + 原形動詞，to 後面接動詞原形。所以用 submit，不用 submitting 或 submitted。"},
+  {q:"The old bridge was ___ down to make room for a new one.",correct:"torn",hint:"tear down 的被動式",opts:["tore","tear","torn","tearing"],explain:"被動語態用 be + 過去分詞。tear 的過去分詞是 torn，所以 was torn down = 被拆除。"},
+  {q:"Despite the difficulties, she never gave ___ on her dreams.",correct:"up",hint:"give up 片語",opts:["in","up","out","away"],explain:"give up 是「放棄」的固定片語。give in 是「讓步」，give out 是「耗盡/分發」，give away 是「贈送/洩露」。"},,
+  {q:"The new law will take ___ next January.",correct:"effect",hint:"take effect 片語",opts:["place","effect","part","action"],explain:"take effect 是「生效、開始實施」的固定片語。take place 是「發生」，take part 是「參與」，take action 是「採取行動」。"},
+  {q:"He is known ___ his kindness and generosity.",correct:"for",hint:"be known for",opts:["as","for","by","with"],explain:"be known for 表示「以...著稱/聞名」。be known as 表示「被稱為...」，意思不同。He is known for his kindness = 他以善良著稱。"},
+  {q:"She could not ___ herself from laughing at his joke.",correct:"stop",hint:"could not stop + V-ing",opts:["help","stop","prevent","avoid"],explain:"could not stop + V-ing 表示「忍不住一直...」，是固定句型。She could not stop laughing = 她忍不住一直笑。"},
+  {q:"The company plans to ___ a new product next spring.",correct:"launch",hint:"填入動詞",opts:["open","launch","start","begin"],explain:"launch a product（推出產品）是商業領域的固定搭配，比 start 更正式。launch 有「正式發布」的意涵。"},
+  {q:"Please make sure to ___ up early for the morning flight.",correct:"wake",hint:"wake up 片語",opts:["get","wake","stand","rise"],explain:"wake up 是「醒來/起床」的固定片語。make sure to wake up early = 確保早起。get up 也有類似意思，但 wake up 更強調從睡眠中醒來。"},
+  {q:"The team worked day and night to meet the ___ deadline.",correct:"tight",hint:"修飾 deadline 的形容詞",opts:["loose","tight","easy","open"],explain:"a tight deadline 是「緊迫的截止日期」的固定搭配。tight 表示「時間緊迫」，loose 是「寬鬆」，是反義詞。"},
+  {q:"She has a great ___ of humor and always makes people laugh.",correct:"sense",hint:"sense of humor 固定搭配",opts:["type","kind","sense","way"],explain:"sense of humor（幽默感）是固定搭配，不可替換。同樣的結構還有 sense of direction（方向感）、sense of responsibility（責任感）。"},
+];
+
+const READING = [
+  {
+    passage:"Every year, millions of people around the world participate in marathons. A marathon is a long-distance race of 42.195 kilometers. The name comes from the legend of a Greek soldier named Pheidippides, who ran from the city of Marathon to Athens to deliver news of a military victory. Today, marathons are held in major cities like New York, London, and Tokyo. Runners train for months to prepare for the race.",
+    questions:[
+      {q:"How long is a marathon?",correct:"42.195 kilometers",opts:["26 miles","42.195 kilometers","100 kilometers","10 kilometers"]},
+      {q:"Where did the name marathon come from?",correct:"A Greek legend",opts:["A Roman legend","A Greek legend","A modern sport event","A TV show"]},
+      {q:"What did Pheidippides run to deliver?",correct:"News of a military victory",opts:["A letter to the king","News of a military victory","A warning about an attack","A message of peace"]},
+    ]
+  },
+  {
+    passage:"Coffee is one of the most popular drinks in the world. It is made from roasted coffee beans, which come from the coffee plant. Brazil is the largest producer of coffee, followed by Vietnam and Colombia. Coffee contains caffeine, which helps people feel more awake and alert. Many people enjoy coffee in the morning to start their day. However, too much caffeine can cause anxiety and sleep problems.",
+    questions:[
+      {q:"Which country produces the most coffee?",correct:"Brazil",opts:["Colombia","Vietnam","Brazil","Ethiopia"]},
+      {q:"What does caffeine help people feel?",correct:"More awake and alert",opts:["Relaxed","More awake and alert","Hungry","Sleepy"]},
+      {q:"What is a possible side effect of too much caffeine?",correct:"Sleep problems",opts:["Better memory","Sleep problems","Stronger muscles","Better eyesight"]},
+    ]
+  },
+  {
+    passage:"The Amazon rainforest, often called the 'lungs of the Earth,' is the world's largest tropical rainforest. It covers most of the Amazon basin in South America. The forest produces 20% of the world's oxygen and is home to millions of species of plants and animals. However, deforestation is a serious threat. Every year, large areas are cleared for farming and logging, which destroys habitats and contributes to climate change.",
+    questions:[
+      {q:"Why is the Amazon called the 'lungs of the Earth'?",correct:"It produces 20% of the world's oxygen",opts:["It is the largest forest","It produces 20% of the world's oxygen","Animals breathe there","It looks like lungs"],},
+      {q:"What is a major threat to the Amazon rainforest?",correct:"Deforestation",opts:["Flooding","Deforestation","Earthquakes","Tourism"]},
+      {q:"What continent is the Amazon rainforest mainly in?",correct:"South America",opts:["Africa","Asia","South America","North America"]},
+    ]
+  },
+  {
+    passage:"Social media has changed the way people communicate. Platforms like Instagram, Twitter, and TikTok allow users to share photos, videos, and opinions instantly. While social media helps people stay connected, it also has downsides. Studies show that heavy social media use is linked to increased feelings of loneliness and anxiety, especially in teenagers. Experts recommend limiting screen time and having face-to-face interactions.",
+    questions:[
+      {q:"What is one benefit of social media?",correct:"Helps people stay connected",opts:["Reduces anxiety","Helps people stay connected","Improves sleep","Increases productivity"]},
+      {q:"Who is most affected by the negative effects of social media?",correct:"Teenagers",opts:["Adults","Teenagers","Children under 5","Elderly people"]},
+      {q:"What do experts recommend?",correct:"Limiting screen time",opts:["Using more apps","Limiting screen time","Avoiding all technology","Posting more content"]},
+    ]
+  },
+];
+
+// ===================== GAME LOGIC =====================
+let currentTopic = '';
+let questions = [];
+let currentQ = 0, score = 0, streak = 0, answered = false;
+let readingPassage = null, readingQIdx = 0;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startGame(topic) {
+  currentTopic = topic;
+  score = 0; streak = 0; currentQ = 0;
+  document.getElementById('topic-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('question-area').style.display = 'block';
+  updateScore();
+
+  if (topic === 'vocab') {
+    const easy = shuffle(VOCAB.filter(w=>w.d==='easy')).slice(0,3);
+    const med = shuffle(VOCAB.filter(w=>w.d==='medium')).slice(0,4);
+    const hard = shuffle(VOCAB.filter(w=>w.d==='hard')).slice(0,3);
+    questions = shuffle([...easy,...med,...hard]);
+  } else if (topic === 'grammar') {
+    questions = shuffle([...GRAMMAR]).slice(0,10);
+  } else if (topic === 'dialogue') {
+    questions = shuffle([...DIALOGUE]).slice(0,10);
+  } else if (topic === 'cloze') {
+    questions = shuffle([...CLOZE]).slice(0,10);
+  } else if (topic === 'reading') {
+    // pick 4 passages, 3 questions each = 12, take first 10 rendered as flat
+    const passages = shuffle([...READING]).slice(0,4);
+    questions = [];
+    passages.forEach(p => {
+      p.questions.forEach(q => questions.push({...q, passage: p.passage}));
+    });
+    questions = questions.slice(0,10);
+  }
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('explain-box').style.display = 'none';
+
+  const TOTAL = questions.length;
+  document.getElementById('progress').style.width = (currentQ / TOTAL * 100) + '%';
+  document.getElementById('q-count').textContent = `第 ${currentQ+1} / ${TOTAL} 題`;
+
+  const q = questions[currentQ];
+  const inner = document.getElementById('q-inner');
+  const optDiv = document.getElementById('options');
+  optDiv.className = 'options';
+
+  if (currentTopic === 'vocab') {
+    const labels = {easy:'初級',medium:'中級',hard:'高級'};
+    const cls = {easy:'badge-easy',medium:'badge-medium',hard:'badge-hard'};
+    inner.innerHTML = `
+      <div class="diff-badge ${cls[q.d]}">${labels[q.d]}</div>
+      <div class="word-display">${q.word}</div>
+      <div class="word-example">"${q.ex}"</div>`;
+  } else if (currentTopic === 'grammar') {
+    const qText = q.q.replace('___', '<span class="blank">___</span>');
+    inner.innerHTML = `
+      <div class="q-label">文法填空</div>
+      <div class="q-text">${qText}</div>`;
+    optDiv.className = 'options single-col';
+  } else if (currentTopic === 'dialogue') {
+    const lines = q.q.split('\n').join('<br>');
+    inner.innerHTML = `
+      <div class="q-label">情境：${q.context}</div>
+      <div class="q-text" style="font-size:15px;">${lines}</div>`;
+    optDiv.className = 'options single-col';
+  } else if (currentTopic === 'cloze') {
+    const qText = q.q.replace('___', '<span class="blank">___</span>');
+    inner.innerHTML = `
+      <div class="q-label">克漏字</div>
+      <div class="q-text">${qText}</div>`;
+  } else if (currentTopic === 'reading') {
+    inner.innerHTML = `
+      <div class="q-label">閱讀測驗</div>
+      <div class="reading-passage">${q.passage}</div>
+      <div class="q-text" style="font-size:15px;font-weight:700;">${q.q}</div>`;
+    optDiv.className = 'options single-col';
+  }
+
+  optDiv.innerHTML = '';
+  optDiv.className = (currentTopic === 'grammar' || currentTopic === 'dialogue' || currentTopic === 'reading') ? 'options single-col' : 'options';
+  shuffle([...q.opts]).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(btn, opt, q.correct);
+    optDiv.appendChild(btn);
+  });
+
+  const card = document.getElementById('q-card');
+  card.classList.remove('fade-in');
+  void card.offsetWidth;
+  card.classList.add('fade-in');
+}
+
+function selectAnswer(btn, selected, correct) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('.opt-btn').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correct) b.classList.add('correct');
+  });
+  const fb = document.getElementById('feedback');
+  if (selected === correct) {
+    btn.classList.add('correct');
+    score++; streak++;
+    fb.textContent = streak >= 3 ? `🔥 連勝 ${streak} 題！` : '✓ 答對了！';
+    fb.className = 'feedback correct';
+  } else {
+    btn.classList.add('wrong');
+    streak = 0;
+    fb.textContent = `✗ 正確答案：「${correct}」`;
+    fb.className = 'feedback wrong';
+    const card = document.getElementById('q-card');
+    card.classList.add('shake');
+    setTimeout(() => card.classList.remove('shake'), 300);
+  }
+  // Show explain box
+  const q = questions[currentQ];
+  if (q.explain) {
+    document.getElementById('explain-text').textContent = q.explain;
+    document.getElementById('explain-box').style.display = 'block';
+  }
+  updateScore();
+  document.getElementById('next-btn').style.display = 'block';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) showResult();
+  else showQuestion();
+}
+
+function showResult() {
+  document.getElementById('question-area').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+  document.getElementById('progress').style.width = '100%';
+  document.getElementById('final-score').textContent = score;
+  const pct = score / questions.length;
+  const r = [[1,'🏆','完美滿分！'],[0.8,'🎉','非常優秀！'],[0.6,'👍','還不錯喔！'],[0.4,'📚','繼續加油！'],[-1,'💪','多練習就會進步！']];
+  const [,emoji,title] = r.find(([t]) => pct >= t);
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+}
+
+function restartGame() {
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('question-area').style.display = 'block';
+  startGame(currentTopic);
+}
+
+function goHome() {
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('topic-screen').style.display = 'block';
+  score = 0; streak = 0;
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('streak').textContent = streak;
+}
+</script>
+</body>
+</html>
