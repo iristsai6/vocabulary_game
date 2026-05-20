@@ -35,6 +35,11 @@
   .topic-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
   .topic-desc{font-size:12px;color:var(--muted);}
 
+  /* BACK BUTTON */
+  .back-btn{display:flex;align-items:center;gap:6px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:99px;padding:7px 14px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;margin-bottom:16px;width:fit-content;}
+  .back-btn:hover{border-color:var(--text);color:var(--text);transform:translateX(-2px);}
+  .back-btn svg{width:14px;height:14px;flex-shrink:0;}
+
   /* TABS (in-game) */
   .tab-bar{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px;}
   .tab-bar::-webkit-scrollbar{display:none;}
@@ -54,18 +59,15 @@
   .badge-medium{background:rgba(232,255,71,0.15);color:var(--accent);}
   .badge-hard{background:rgba(248,113,113,0.15);color:var(--wrong);}
 
-  /* VOCAB word display */
   .word-display{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,9vw,48px);font-weight:700;letter-spacing:-1px;margin:0 0 16px 0;padding:0.1em 0 0.4em 0;line-height:1.2;word-break:break-word;display:block;}
   .word-hint{font-size:13px;color:var(--muted);margin-bottom:4px;}
   .word-example{font-size:13px;color:#555;font-style:italic;}
 
-  /* GRAMMAR / DIALOGUE / CLOZE question text */
   .q-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
   .q-text{font-size:17px;line-height:1.7;color:var(--text);margin-bottom:6px;}
   .q-text .blank{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);padding:0 6px;}
   .q-context{font-size:13px;color:#555;font-style:italic;margin-top:8px;}
 
-  /* READING */
   .reading-passage{font-size:14px;line-height:1.9;color:#bbb;background:#111;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid var(--border);}
   .reading-passage .highlight{color:var(--accent);font-weight:700;}
 
@@ -151,6 +153,14 @@
 
   <!-- GAME AREA -->
   <div id="game-screen" style="display:none;">
+    <!-- BACK TO HOME BUTTON -->
+    <button class="back-btn" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      返回主選單
+    </button>
+
     <div class="progress-wrap"><div class="progress-bar" id="progress" style="width:0%"></div></div>
     <div id="question-area">
       <div class="card fade-in" id="q-card">
@@ -178,8 +188,6 @@
 </div>
 
 <script>
-// ===================== BANKS =====================
-
 const VOCAB = [
   {word:"apple",d:"easy",correct:"蘋果",hint:"名詞 n.",ex:"I eat an apple every day.",opts:["蘋果","香蕉","橘子","葡萄"],explain:"apple 是最常見的水果名詞。Apple a day keeps the doctor away 是著名英文諺語，意思是「每天一顆蘋果，醫生遠離我」。"},
   {word:"happy",d:"easy",correct:"快樂的",hint:"形容詞 adj.",ex:"She is very happy today.",opts:["快樂的","悲傷的","憤怒的","疲倦的"],explain:"happy 是形容詞，表示「快樂的、高興的」。反義詞是 sad（悲傷的）。常見用法：I'm so happy for you!（我為你感到高興！）"},
@@ -200,7 +208,7 @@ const VOCAB = [
   {word:"generous",d:"medium",correct:"慷慨的",hint:"形容詞 adj.",ex:"She is very generous.",opts:["慷慨的","吝嗇的","誠實的","勤奮的"],explain:"generous 形容詞「慷慨的、大方的」。反義詞是 stingy（吝嗇的）。名詞是 generosity（慷慨）。"},
   {word:"anxious",d:"medium",correct:"焦慮的",hint:"形容詞 adj.",ex:"She felt anxious before the test.",opts:["焦慮的","輕鬆的","興奮的","平靜的"],explain:"anxious 形容詞「焦慮的」。be anxious about something 表示「為某事擔憂」。名詞是 anxiety（焦慮）。"},
   {word:"ancient",d:"medium",correct:"古老的",hint:"形容詞 adj.",ex:"This is an ancient temple.",opts:["古老的","現代的","未來的","全新的"],explain:"ancient 形容詞「古老的、古代的」，通常指非常久遠的歷史，如 ancient civilization（古代文明）、ancient Rome（古羅馬）。"},
-  {word:"brilliant",d:"medium",correct:"聰明的",hint:"形容詞 adj.",ex:"She is a brilliant student.",opts:["聰明的","平庸的","懶惰的","頑皮的"],explain:"brilliant 形容詞「聰明的、傑出的」，比 smart 更強調天才級別的聰明。也可表示「光輝的」，如 brilliant sunshine（燦爛的陽光）。"},
+  {word:"brilliant",d:"medium",correct:"聰明的",hint:"形容詞 adj.",ex:"She is a brilliant student.",opts:["聰明的","平庸的","懶惰的","頑皮的"],explain:"brilliant 形容詞「聰明的、傑出的」，比 smart 更強調天才級別的聰明。也可表示「光輝的」，如 brilliant sunshine（燦爽的陽光）。"},
   {word:"flexible",d:"medium",correct:"靈活的",hint:"形容詞 adj.",ex:"You need a flexible schedule.",opts:["靈活的","僵硬的","固定的","嚴格的"],explain:"flexible 形容詞「靈活的、有彈性的」。a flexible schedule（彈性時間表）。名詞是 flexibility（靈活性）。"},
   {word:"courage",d:"medium",correct:"勇氣",hint:"名詞 n.",ex:"It takes courage to try.",opts:["勇氣","恐懼","力量","智慧"],explain:"courage 名詞「勇氣」，it takes courage to... 表示「做...需要勇氣」。形容詞是 courageous（勇敢的）。"},
   {word:"grateful",d:"medium",correct:"感激的",hint:"形容詞 adj.",ex:"I am grateful for your help.",opts:["感激的","失望的","羨慕的","驚訝的"],explain:"grateful 形容詞「感激的」。be grateful for something（對某事感激）。比 thankful 更正式。名詞是 gratitude（感激之情）。"},
@@ -267,7 +275,7 @@ const CLOZE = [
   {q:"She gave a ___ speech that moved the entire audience.",correct:"moving",hint:"填入形容詞",opts:["bored","moving","moved","boring"],explain:"moving 形容「令人感動的」（主動讓人有感觸），moved 是「被感動的」（人的感受）。a moving speech = 一篇感人的演講。"},
   {q:"The manager asked us to ___ our reports by Friday.",correct:"submit",hint:"填入動詞原形",opts:["submitting","submitted","submit","submits"],explain:"ask someone to + 原形動詞，to 後面接動詞原形。所以用 submit，不用 submitting 或 submitted。"},
   {q:"The old bridge was ___ down to make room for a new one.",correct:"torn",hint:"tear down 的被動式",opts:["tore","tear","torn","tearing"],explain:"被動語態用 be + 過去分詞。tear 的過去分詞是 torn，所以 was torn down = 被拆除。"},
-  {q:"Despite the difficulties, she never gave ___ on her dreams.",correct:"up",hint:"give up 片語",opts:["in","up","out","away"],explain:"give up 是「放棄」的固定片語。give in 是「讓步」，give out 是「耗盡/分發」，give away 是「贈送/洩露」。"},,
+  {q:"Despite the difficulties, she never gave ___ on her dreams.",correct:"up",hint:"give up 片語",opts:["in","up","out","away"],explain:"give up 是「放棄」的固定片語。give in 是「讓步」，give out 是「耗盡/分發」，give away 是「贈送/洩露」。"},
   {q:"The new law will take ___ next January.",correct:"effect",hint:"take effect 片語",opts:["place","effect","part","action"],explain:"take effect 是「生效、開始實施」的固定片語。take place 是「發生」，take part 是「參與」，take action 是「採取行動」。"},
   {q:"He is known ___ his kindness and generosity.",correct:"for",hint:"be known for",opts:["as","for","by","with"],explain:"be known for 表示「以...著稱/聞名」。be known as 表示「被稱為...」，意思不同。He is known for his kindness = 他以善良著稱。"},
   {q:"She could not ___ herself from laughing at his joke.",correct:"stop",hint:"could not stop + V-ing",opts:["help","stop","prevent","avoid"],explain:"could not stop + V-ing 表示「忍不住一直...」，是固定句型。She could not stop laughing = 她忍不住一直笑。"},
@@ -297,7 +305,7 @@ const READING = [
   {
     passage:"The Amazon rainforest, often called the 'lungs of the Earth,' is the world's largest tropical rainforest. It covers most of the Amazon basin in South America. The forest produces 20% of the world's oxygen and is home to millions of species of plants and animals. However, deforestation is a serious threat. Every year, large areas are cleared for farming and logging, which destroys habitats and contributes to climate change.",
     questions:[
-      {q:"Why is the Amazon called the 'lungs of the Earth'?",correct:"It produces 20% of the world's oxygen",opts:["It is the largest forest","It produces 20% of the world's oxygen","Animals breathe there","It looks like lungs"],},
+      {q:"Why is the Amazon called the 'lungs of the Earth'?",correct:"It produces 20% of the world's oxygen",opts:["It is the largest forest","It produces 20% of the world's oxygen","Animals breathe there","It looks like lungs"]},
       {q:"What is a major threat to the Amazon rainforest?",correct:"Deforestation",opts:["Flooding","Deforestation","Earthquakes","Tourism"]},
       {q:"What continent is the Amazon rainforest mainly in?",correct:"South America",opts:["Africa","Asia","South America","North America"]},
     ]
@@ -312,176 +320,149 @@ const READING = [
   },
 ];
 
-// ===================== GAME LOGIC =====================
-let currentTopic = '';
-let questions = [];
-let currentQ = 0, score = 0, streak = 0, answered = false;
-let readingPassage = null, readingQIdx = 0;
+let currentTopic='',questions=[],currentQ=0,score=0,streak=0,answered=false;
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-function startGame(topic) {
-  currentTopic = topic;
-  score = 0; streak = 0; currentQ = 0;
-  document.getElementById('topic-screen').style.display = 'none';
-  document.getElementById('game-screen').style.display = 'block';
-  document.getElementById('result-screen').style.display = 'none';
-  document.getElementById('question-area').style.display = 'block';
+function startGame(topic){
+  currentTopic=topic;score=0;streak=0;currentQ=0;
+  document.getElementById('topic-screen').style.display='none';
+  document.getElementById('game-screen').style.display='block';
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('question-area').style.display='block';
   updateScore();
-
-  if (topic === 'vocab') {
-    const easy = shuffle(VOCAB.filter(w=>w.d==='easy')).slice(0,3);
-    const med = shuffle(VOCAB.filter(w=>w.d==='medium')).slice(0,4);
-    const hard = shuffle(VOCAB.filter(w=>w.d==='hard')).slice(0,3);
-    questions = shuffle([...easy,...med,...hard]);
-  } else if (topic === 'grammar') {
-    questions = shuffle([...GRAMMAR]).slice(0,10);
-  } else if (topic === 'dialogue') {
-    questions = shuffle([...DIALOGUE]).slice(0,10);
-  } else if (topic === 'cloze') {
-    questions = shuffle([...CLOZE]).slice(0,10);
-  } else if (topic === 'reading') {
-    // pick 4 passages, 3 questions each = 12, take first 10 rendered as flat
-    const passages = shuffle([...READING]).slice(0,4);
-    questions = [];
-    passages.forEach(p => {
-      p.questions.forEach(q => questions.push({...q, passage: p.passage}));
-    });
-    questions = questions.slice(0,10);
+  if(topic==='vocab'){
+    const easy=shuffle(VOCAB.filter(w=>w.d==='easy')).slice(0,3);
+    const med=shuffle(VOCAB.filter(w=>w.d==='medium')).slice(0,4);
+    const hard=shuffle(VOCAB.filter(w=>w.d==='hard')).slice(0,3);
+    questions=shuffle([...easy,...med,...hard]);
+  } else if(topic==='grammar'){
+    questions=shuffle([...GRAMMAR]).slice(0,10);
+  } else if(topic==='dialogue'){
+    questions=shuffle([...DIALOGUE]).slice(0,10);
+  } else if(topic==='cloze'){
+    questions=shuffle([...CLOZE]).slice(0,10);
+  } else if(topic==='reading'){
+    const passages=shuffle([...READING]).slice(0,4);
+    questions=[];
+    passages.forEach(p=>{p.questions.forEach(q=>questions.push({...q,passage:p.passage}));});
+    questions=questions.slice(0,10);
   }
   showQuestion();
 }
 
-function showQuestion() {
-  answered = false;
-  document.getElementById('next-btn').style.display = 'none';
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('explain-box').style.display = 'none';
-
-  const TOTAL = questions.length;
-  document.getElementById('progress').style.width = (currentQ / TOTAL * 100) + '%';
-  document.getElementById('q-count').textContent = `第 ${currentQ+1} / ${TOTAL} 題`;
-
-  const q = questions[currentQ];
-  const inner = document.getElementById('q-inner');
-  const optDiv = document.getElementById('options');
-  optDiv.className = 'options';
-
-  if (currentTopic === 'vocab') {
-    const labels = {easy:'初級',medium:'中級',hard:'高級'};
-    const cls = {easy:'badge-easy',medium:'badge-medium',hard:'badge-hard'};
-    inner.innerHTML = `
-      <div class="diff-badge ${cls[q.d]}">${labels[q.d]}</div>
-      <div class="word-display">${q.word}</div>
-      <div class="word-example">"${q.ex}"</div>`;
-  } else if (currentTopic === 'grammar') {
-    const qText = q.q.replace('___', '<span class="blank">___</span>');
-    inner.innerHTML = `
-      <div class="q-label">文法填空</div>
-      <div class="q-text">${qText}</div>`;
-    optDiv.className = 'options single-col';
-  } else if (currentTopic === 'dialogue') {
-    const lines = q.q.split('\n').join('<br>');
-    inner.innerHTML = `
-      <div class="q-label">情境：${q.context}</div>
-      <div class="q-text" style="font-size:15px;">${lines}</div>`;
-    optDiv.className = 'options single-col';
-  } else if (currentTopic === 'cloze') {
-    const qText = q.q.replace('___', '<span class="blank">___</span>');
-    inner.innerHTML = `
-      <div class="q-label">克漏字</div>
-      <div class="q-text">${qText}</div>`;
-  } else if (currentTopic === 'reading') {
-    inner.innerHTML = `
-      <div class="q-label">閱讀測驗</div>
-      <div class="reading-passage">${q.passage}</div>
-      <div class="q-text" style="font-size:15px;font-weight:700;">${q.q}</div>`;
-    optDiv.className = 'options single-col';
+function showQuestion(){
+  answered=false;
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('explain-box').style.display='none';
+  const TOTAL=questions.length;
+  document.getElementById('progress').style.width=(currentQ/TOTAL*100)+'%';
+  document.getElementById('q-count').textContent=`第 ${currentQ+1} / ${TOTAL} 題`;
+  const q=questions[currentQ];
+  const inner=document.getElementById('q-inner');
+  const optDiv=document.getElementById('options');
+  optDiv.className='options';
+  if(currentTopic==='vocab'){
+    const labels={easy:'初級',medium:'中級',hard:'高級'};
+    const cls={easy:'badge-easy',medium:'badge-medium',hard:'badge-hard'};
+    inner.innerHTML=`<div class="diff-badge ${cls[q.d]}">${labels[q.d]}</div><div class="word-display">${q.word}</div><div class="word-example">"${q.ex}"</div>`;
+  } else if(currentTopic==='grammar'){
+    const qText=q.q.replace('___','<span class="blank">___</span>');
+    inner.innerHTML=`<div class="q-label">文法填空</div><div class="q-text">${qText}</div>`;
+    optDiv.className='options single-col';
+  } else if(currentTopic==='dialogue'){
+    const lines=q.q.split('\n').join('<br>');
+    inner.innerHTML=`<div class="q-label">情境：${q.context}</div><div class="q-text" style="font-size:15px;">${lines}</div>`;
+    optDiv.className='options single-col';
+  } else if(currentTopic==='cloze'){
+    const qText=q.q.replace('___','<span class="blank">___</span>');
+    inner.innerHTML=`<div class="q-label">克漏字</div><div class="q-text">${qText}</div>`;
+  } else if(currentTopic==='reading'){
+    inner.innerHTML=`<div class="q-label">閱讀測驗</div><div class="reading-passage">${q.passage}</div><div class="q-text" style="font-size:15px;font-weight:700;">${q.q}</div>`;
+    optDiv.className='options single-col';
   }
-
-  optDiv.innerHTML = '';
-  optDiv.className = (currentTopic === 'grammar' || currentTopic === 'dialogue' || currentTopic === 'reading') ? 'options single-col' : 'options';
-  shuffle([...q.opts]).forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'opt-btn';
-    btn.textContent = opt;
-    btn.onclick = () => selectAnswer(btn, opt, q.correct);
+  optDiv.innerHTML='';
+  optDiv.className=(currentTopic==='grammar'||currentTopic==='dialogue'||currentTopic==='reading')?'options single-col':'options';
+  shuffle([...q.opts]).forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.textContent=opt;
+    btn.onclick=()=>selectAnswer(btn,opt,q.correct);
     optDiv.appendChild(btn);
   });
-
-  const card = document.getElementById('q-card');
+  const card=document.getElementById('q-card');
   card.classList.remove('fade-in');
   void card.offsetWidth;
   card.classList.add('fade-in');
 }
 
-function selectAnswer(btn, selected, correct) {
-  if (answered) return;
-  answered = true;
-  document.querySelectorAll('.opt-btn').forEach(b => {
-    b.disabled = true;
-    if (b.textContent === correct) b.classList.add('correct');
+function selectAnswer(btn,selected,correct){
+  if(answered)return;
+  answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===correct)b.classList.add('correct');
   });
-  const fb = document.getElementById('feedback');
-  if (selected === correct) {
+  const fb=document.getElementById('feedback');
+  if(selected===correct){
     btn.classList.add('correct');
-    score++; streak++;
-    fb.textContent = streak >= 3 ? `🔥 連勝 ${streak} 題！` : '✓ 答對了！';
-    fb.className = 'feedback correct';
+    score++;streak++;
+    fb.textContent=streak>=3?`🔥 連勝 ${streak} 題！`:'✓ 答對了！';
+    fb.className='feedback correct';
   } else {
     btn.classList.add('wrong');
-    streak = 0;
-    fb.textContent = `✗ 正確答案：「${correct}」`;
-    fb.className = 'feedback wrong';
-    const card = document.getElementById('q-card');
+    streak=0;
+    fb.textContent=`✗ 正確答案：「${correct}」`;
+    fb.className='feedback wrong';
+    const card=document.getElementById('q-card');
     card.classList.add('shake');
-    setTimeout(() => card.classList.remove('shake'), 300);
+    setTimeout(()=>card.classList.remove('shake'),300);
   }
-  // Show explain box
-  const q = questions[currentQ];
-  if (q.explain) {
-    document.getElementById('explain-text').textContent = q.explain;
-    document.getElementById('explain-box').style.display = 'block';
+  const q=questions[currentQ];
+  if(q.explain){
+    document.getElementById('explain-text').textContent=q.explain;
+    document.getElementById('explain-box').style.display='block';
   }
   updateScore();
-  document.getElementById('next-btn').style.display = 'block';
+  document.getElementById('next-btn').style.display='block';
 }
 
-function nextQuestion() {
+function nextQuestion(){
   currentQ++;
-  if (currentQ >= questions.length) showResult();
+  if(currentQ>=questions.length)showResult();
   else showQuestion();
 }
 
-function showResult() {
-  document.getElementById('question-area').style.display = 'none';
-  document.getElementById('result-screen').style.display = 'block';
-  document.getElementById('progress').style.width = '100%';
-  document.getElementById('final-score').textContent = score;
-  const pct = score / questions.length;
-  const r = [[1,'🏆','完美滿分！'],[0.8,'🎉','非常優秀！'],[0.6,'👍','還不錯喔！'],[0.4,'📚','繼續加油！'],[-1,'💪','多練習就會進步！']];
-  const [,emoji,title] = r.find(([t]) => pct >= t);
-  document.getElementById('result-emoji').textContent = emoji;
-  document.getElementById('result-title').textContent = title;
+function showResult(){
+  document.getElementById('question-area').style.display='none';
+  document.getElementById('result-screen').style.display='block';
+  document.getElementById('progress').style.width='100%';
+  document.getElementById('final-score').textContent=score;
+  const pct=score/questions.length;
+  const r=[[1,'🏆','完美滿分！'],[0.8,'🎉','非常優秀！'],[0.6,'👍','還不錯喔！'],[0.4,'📚','繼續加油！'],[-1,'💪','多練習就會進步！']];
+  const [,emoji,title]=r.find(([t])=>pct>=t);
+  document.getElementById('result-emoji').textContent=emoji;
+  document.getElementById('result-title').textContent=title;
 }
 
-function restartGame() {
-  document.getElementById('result-screen').style.display = 'none';
-  document.getElementById('question-area').style.display = 'block';
+function restartGame(){
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('question-area').style.display='block';
   startGame(currentTopic);
 }
 
-function goHome() {
-  document.getElementById('game-screen').style.display = 'none';
-  document.getElementById('topic-screen').style.display = 'block';
-  score = 0; streak = 0;
+function goHome(){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('topic-screen').style.display='block';
+  score=0;streak=0;
   updateScore();
 }
 
-function updateScore() {
-  document.getElementById('score').textContent = score;
-  document.getElementById('streak').textContent = streak;
+function updateScore(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
 }
 </script>
 </body>
